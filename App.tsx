@@ -1,118 +1,259 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+/* eslint-disable react/self-closing-comp */
+/* eslint-disable react-native/no-inline-styles */
+import {  View,Text,FlatList,TouchableOpacity,Dimensions,Animated,Modal, Image, ImageBackground,} from 'react-native';
+import React, {useRef, useState} from 'react';
+import {englishData} from './EnglishQuestions';
+import QuestionItem from './QuestionItem';
 
-import React from 'react';
-import type {PropsWithChildren} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+const {height, width} = Dimensions.get('window');
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
-
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
-
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
-
-function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+const App = () => {
+  let correctAnswers=0;
+  let wrongAnwers=0;
+  const [currentIndex, setCurrentIndex] = useState(1);
+  const [questions, setQuestions] = useState(englishData);
+  const listRef = useRef();
+  const [modalVisible, setModalVisible] = useState(false);
+  const OnSelectOption = (index, x) => {
+    const tempData = questions;
+    tempData.map((item, ind) => {
+      if (index == ind) {
+        if (item.marked !== -1) {
+          item.marked = -1;
+        } else {
+          item.marked = x;
+        }
+      }
+    });
+    let temp = [];
+    tempData.map(item => {
+      temp.push(item);
+    });
+    setQuestions(temp);
   };
-
+  const getTextScore = () => {
+    let marks = 0;
+    questions.map(item => {
+      if (item.marked == item.correct) {
+        marks = marks + 5;
+        correctAnswers++;
+      }
+      else{
+        wrongAnwers++
+      }
+    });
+    return marks;
+  };
+  
+  
+  
+  const reset = () => {
+    const tempData = questions;
+    tempData.map((item, ind) => {
+      item.marked = -1;
+    });
+    let temp = [];
+    tempData.map(item => {
+      temp.push(item);
+    });
+    setQuestions(temp);
+  };
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
+    
+    <View style={{flex: 1,marginTop:5}}>
+     
+      <View><Image source={{uri: 'https://cdn.create.vista.com/api/media/small/50853425/stock-photo-quiz-written-in-white-on-red-yellow-green-and-blue-computer-keys-3d-illustration-isolated'}}
+       style={{width: '100%', height: 100}} /></View>
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginTop: 20,
+        }}>
+        <Text
+          style={{
+            fontSize: 20,
+            fontWeight: '600',
+
+            marginLeft: 20,
+            color: '#000',
+          }}>
+          English Questions :{' ' + currentIndex + '/' + englishData.length}
+        </Text>
+        <Text
+          style={{
+            marginRight: 20,
+            fontSize: 20,
+            fontWeight: '600',
+            color: 'black',
+          }}
+          onPress={() => {
+            reset();
+            listRef.current.scrollToIndex({animated: true, index: 0});
+          }}>
+          Reset
+        </Text>
+      </View>
+      <View style={{marginTop: 30}}>
+        <FlatList
+          ref={listRef}
+          showsHorizontalScrollIndicator={false}
+          pagingEnabled
+          horizontal
+          onScroll={e => {
+            const x = e.nativeEvent.contentOffset.x / width + 1;
+            setCurrentIndex(x.toFixed(0));
+          }}
+          data={questions}
+          renderItem={({item, index}) => {
+            return (
+              <QuestionItem
+                data={item}
+                selectedOption={x => {
+                  OnSelectOption(index, x);
+                }}
+              />
+            );
+          }}
+        />
+      </View>
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          position: 'absolute',
+          bottom: 50,
+          width: '100%',
+        }}>
+        <TouchableOpacity
+          style={{
+            backgroundColor: currentIndex > 1 ? 'purple' : 'gray',
+            height: 50,
+            width: 100,
+            borderRadius: 10,
+            marginLeft: 20,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+          onPress={() => {
+            if (currentIndex > 1) {
+              listRef.current.scrollToIndex({
+                animated: true,
+                index: parseInt(currentIndex) - 2,
+              });
+            }
+          }}>
+          <Text style={{color: '#fff'}}>Previous</Text>
+        </TouchableOpacity>
+        {currentIndex == 8 ? (
+          <TouchableOpacity
+            style={{
+              backgroundColor: 'green',
+              height: 50,
+              width: 100,
+              borderRadius: 10,
+              marginRight: 20,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+            onPress={() => {
+              setModalVisible(true);
+            }}>
+            <Text style={{color: '#fff'}}>Submit</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={{
+              backgroundColor: 'purple',
+              height: 50,
+              width: 100,
+              borderRadius: 10,
+              marginRight: 20,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+            onPress={() => {
+              if (questions[currentIndex - 1].marked !== -1) {
+                if (currentIndex < questions.length) {
+                  listRef.current.scrollToIndex({
+                    animated: true,
+                    index: currentIndex,
+                  });
+                }
+              }
+            }}>
+            <Text style={{color: '#fff'}}>Next</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {
+          setModalVisible(!modalVisible);
+        }}>
         <View
           style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,.5)',
+            justifyContent: 'center',
+            alignItems: 'center',
           }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
+          <View
+            style={{
+              backgroundColor: '#fff',
+              width: '90%',
 
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
+              borderRadius: 10,
+            }}>
+            <Text
+              style={{
+                fontSize: 30,
+                fontWeight: '800',
+                alignSelf: 'center',
+                marginTop: 20,
+              }}>
+              Text Score
+            </Text>
+            <Text
+              style={{
+                fontSize: 40,
+                fontWeight: '800',
+                alignSelf: 'center',
+                marginTop: 20,
+                color: 'green',
+              }}>
+              {getTextScore()}
+            </Text>
+            <Text style={{alignSelf:'center'}}>
+                   Correct Answers:{correctAnswers}{"\n"}
+                   Wrong Answers:{wrongAnwers}
+                   
+            </Text>
+           
+            <TouchableOpacity
+              style={{
+                alignSelf: 'center',
+                height: 40,
+                padding: 10,
+                borderWidth: 1,
+                borderRadius: 10,
+                marginTop: 20,
+                marginBottom: 20,
+              }}
+              onPress={() => {
+                setModalVisible(!modalVisible);
+              }}>
+              <Text>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+};
 
 export default App;
